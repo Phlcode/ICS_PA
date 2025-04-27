@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ICS2023 Programming Assignment
 
 This project is the programming assignment of the class ICS(Introduction to Computer System)
@@ -17,3 +18,7 @@ The following subprojects/components are included. Some of them are not fully im
 * [Abstract-Machine](https://github.com/NJU-ProjectN/abstract-machine)
 * [Nanos-lite](https://github.com/NJU-ProjectN/nanos-lite)
 * [Navy-apps](https://github.com/NJU-ProjectN/navy-apps)
+=======
+#ICS_PA
+#NJU_ICS_why
+>>>>>>> cfdb53c315cb9d34eaecbe5a5448ec3086317c10
