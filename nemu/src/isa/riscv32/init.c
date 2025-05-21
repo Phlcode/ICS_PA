@@ -28,9 +28,9 @@ static const uint32_t img [] = {
 
 static void restart() {
   /* Set the initial program counter. */
-  cpu.pc = RESET_VECTOR;
+  cpu.pc = RESET_VECTOR;//L RESET_VECTOR = 0x80000000.
 
-  /* The zero register is always 0. */
+  /* The zero register is always 0.L 0号寄存器存放的是0 */
   cpu.gpr[0] = 0;
 }
 
@@ -38,6 +38,7 @@ void init_isa() {
   /* Load built-in image. */
   memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
 
-  /* Initialize this virtual computer system. */
+  /* Initialize this virtual computer system.L 初始化寄存器 */
   restart();
 }
+//L 内置的客户程序

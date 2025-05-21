@@ -21,7 +21,8 @@
 #if   defined(CONFIG_PMEM_MALLOC)
 static uint8_t *pmem = NULL;
 #else // CONFIG_PMEM_GARRAY
-static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
+//L NEMU默认为客户计算机提供128MB的物理内存.
+static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};//L 声明了一个静态的、按页(4KB)对齐的字节数组 并初始化为0.表示物理内存空间128MB
 #endif
 
 uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
