@@ -21,9 +21,13 @@
 #if   defined(CONFIG_PMEM_MALLOC)
 static uint8_t *pmem = NULL;
 #else // CONFIG_PMEM_GARRAY
-static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
+//L NEMU默认为客户计算机提供128MB的物理内存.
+static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};//L 声明了一个静态的、按页(4KB)对齐的字节数组 并初始化为0.表示物理内存空间128MB
 #endif
 
+/**L 在RISC-V中，CONFIG_MBASE = 0X80000000;将来CPU访问内存时, 我们会将CPU将要访问的内存地址映射到pmem中的相应偏移位置, 
+ * 这是通过guest_to_host()函数实现的.如果RISC-V的CPU打算访问内存地址0x8000 0000, 我们会让它最终访问pmem[0],
+ * 从而可以正确访问客户程序的第一条指令. 这种机制有一个专门的名字, 叫地址映射,*/
 uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
 paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
 

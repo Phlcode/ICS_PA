@@ -32,8 +32,6 @@ static void welcome() {
   Log("Build time: %s, %s", __TIME__, __DATE__);
   printf("Welcome to %s-NEMU!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
   printf("For help, type \"help\"\n");
-  Log("Exercise: Please remove me in the source code and compile NEMU again.");
-  assert(0);
 }
 
 #ifndef CONFIG_TARGET_AM
@@ -45,6 +43,7 @@ static char *log_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
+int aa = 123;
 
 static long load_img() {
   if (img_file == NULL) {
@@ -52,17 +51,17 @@ static long load_img() {
     return 4096; // built-in image size
   }
 
-  FILE *fp = fopen(img_file, "rb");
+  FILE *fp = fopen(img_file, "rb");//L 返回一个 FILE 指针。否则返回 NULL
   Assert(fp, "Can not open '%s'", img_file);
 
-  fseek(fp, 0, SEEK_END);
-  long size = ftell(fp);
+  fseek(fp, 0, SEEK_END);//L 移动文件指针到末尾
+  long size = ftell(fp);//L 获取当前指针位置（即文件大小 以Byte记数）.
 
   Log("The image is %s, size = %ld", img_file, size);
 
-  fseek(fp, 0, SEEK_SET);
-  int ret = fread(guest_to_host(RESET_VECTOR), size, 1, fp);
-  assert(ret == 1);
+  fseek(fp, 0, SEEK_SET);//L 回滚文件指针并读取内容
+  int ret = fread(guest_to_host(RESET_VECTOR), size, 1, fp);//L 成功读取到一个元素时则返回1.
+  assert(ret == 1);//L 断言验证成功.
 
   fclose(fp);
   return size;
@@ -78,13 +77,13 @@ static int parse_args(int argc, char *argv[]) {
     {0          , 0                , NULL,  0 },
   };
   int o;
-  while ( (o = getopt_long(argc, argv, "-bhl:d:p:", table, NULL)) != -1) {
+  while ( (o = getopt_long(argc, argv, "-bhl:d:p:", table, NULL)) != -1) {//L getopt_long对非选项参数返回1
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       case 'l': log_file = optarg; break;
       case 'd': diff_so_file = optarg; break;
-      case 1: img_file = optarg; return 0;
+      case 1: img_file = optarg; return 0;//L optarg自动存储非选项参数.
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
         printf("\t-b,--batch              run with batch mode\n");
@@ -114,10 +113,10 @@ void init_monitor(int argc, char *argv[]) {
   init_mem();
 
   /* Initialize devices. */
-  IFDEF(CONFIG_DEVICE, init_device());
+  IFDEF(CONFIG_DEVICE, init_device());//L 这步没有执行.
 
   /* Perform ISA dependent initialization. */
-  init_isa();
+  init_isa();//L 加载内置镜像到内存中.
 
   /* Load the image to memory. This will overwrite the built-in image. */
   long img_size = load_img();

@@ -20,8 +20,8 @@
 
 static inline word_t host_read(void *addr, int len) {
   switch (len) {
-    case 1: return *(uint8_t  *)addr;
-    case 2: return *(uint16_t *)addr;
+    case 1: return *(uint8_t  *)addr;//L (type *)addr告诉编译器如何解释该地址处的内存
+    case 2: return *(uint16_t *)addr;// *(type *)addr：解引用转换后的指针，读取该地址处的值，大小由 type 决定
     case 4: return *(uint32_t *)addr;
     IFDEF(CONFIG_ISA64, case 8: return *(uint64_t *)addr);
     default: MUXDEF(CONFIG_RT_CHECK, assert(0), return 0);

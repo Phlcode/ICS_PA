@@ -20,6 +20,7 @@ word_t vaddr_ifetch(vaddr_t addr, int len) {
   return paddr_read(addr, len);
 }
 
+//L 使用addr_read和vaddr_write来访问模拟的内存；vaddr代表虚拟地址，paddr代表物理地址
 word_t vaddr_read(vaddr_t addr, int len) {
   return paddr_read(addr, len);
 }

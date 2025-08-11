@@ -25,6 +25,8 @@
  */
 #define MAX_INST_TO_PRINT 10
 
+int update_watchpoint();
+
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
@@ -38,12 +40,17 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+  #ifdef CONFIG_WATCHPOINT
+    if (update_watchpoint() > 0){//L 当监视点的值发生变化 则暂停程序.
+      nemu_state.state = NEMU_STOP;
+    }
+  #endif
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {
   s->pc = pc;
   s->snpc = pc;
-  isa_exec_once(s);
+  isa_exec_once(s);//L 一条指令的具体执行，不同架构的指令执行不一样。
   cpu.pc = s->dnpc;
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
@@ -74,8 +81,8 @@ static void exec_once(Decode *s, vaddr_t pc) {
 static void execute(uint64_t n) {
   Decode s;
   for (;n > 0; n --) {
-    exec_once(&s, cpu.pc);
-    g_nr_guest_inst ++;
+    exec_once(&s, cpu.pc);//L 让CPU执行当前PC指向的一条指令，然后更新PC.
+    g_nr_guest_inst ++;//L 指令数目. 
     trace_and_difftest(&s, cpu.pc);
     if (nemu_state.state != NEMU_RUNNING) break;
     IFDEF(CONFIG_DEVICE, device_update());
@@ -85,8 +92,8 @@ static void execute(uint64_t n) {
 static void statistic() {
   IFNDEF(CONFIG_TARGET_AM, setlocale(LC_NUMERIC, ""));
 #define NUMBERIC_FMT MUXDEF(CONFIG_TARGET_AM, "%", "%'") PRIu64
-  Log("host time spent = " NUMBERIC_FMT " us", g_timer);
-  Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);
+  Log("host time spent = " NUMBERIC_FMT " us", g_timer);//L 花费的时间. us
+  Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);//L 指令数目. 
   if (g_timer > 0) Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);
   else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
 }
@@ -97,21 +104,21 @@ void assert_fail_msg() {
 }
 
 /* Simulate how the CPU works. */
-void cpu_exec(uint64_t n) {
-  g_print_step = (n < MAX_INST_TO_PRINT);
-  switch (nemu_state.state) {
+void cpu_exec(uint64_t n) {//L 传入-1时会发生隐式转换，变成一个很大的无符号数，这里可以理解为执行“无穷”步.
+  g_print_step = (n < MAX_INST_TO_PRINT);//L 这个地方g_print_step是flase.
+  switch (nemu_state.state) {//L 默认state==NEMU_STOP.
     case NEMU_END: case NEMU_ABORT:
       printf("Program execution has ended. To restart the program, exit NEMU and run again.\n");
       return;
-    default: nemu_state.state = NEMU_RUNNING;
+    default: nemu_state.state = NEMU_RUNNING;//0
   }
 
   uint64_t timer_start = get_time();
 
-  execute(n);
+  execute(n);//L 模拟CPU的工作方式，不断地执行指令.
 
   uint64_t timer_end = get_time();
-  g_timer += timer_end - timer_start;
+  g_timer += timer_end - timer_start;//L 花费的时间
 
   switch (nemu_state.state) {
     case NEMU_RUNNING: nemu_state.state = NEMU_STOP; break;

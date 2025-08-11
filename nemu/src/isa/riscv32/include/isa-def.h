@@ -19,8 +19,8 @@
 #include <common.h>
 
 typedef struct {
-  word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
-  vaddr_t pc;
+  word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];//L 32. 通用寄存器
+  vaddr_t pc;//L typedef word_t vaddr_t. 都是uint32. pc寄存器
 } MUXDEF(CONFIG_RV64, riscv64_CPU_state, riscv32_CPU_state);
 
 // decode

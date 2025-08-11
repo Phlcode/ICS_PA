@@ -16,7 +16,7 @@
 #include <isa.h>
 #include "local-include/reg.h"
 
-const char *regs[] = {
+const char *regs[] = {//L 寄存器的名字 对应的值在cpu.gpr中
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
   "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
   "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
@@ -24,8 +24,23 @@ const char *regs[] = {
 };
 
 void isa_reg_display() {
+  bool success = false;
+  for (int i = 0; i < sizeof(regs)/sizeof(const char*); i++){
+    word_t RegVal = isa_reg_str2val(regs[i], &success);
+    printf("%s \t %x \t %d \n", regs[i], RegVal, RegVal);
 }
 
+}
+
+//L 通过寄存器名称来获取寄存器值的函数
 word_t isa_reg_str2val(const char *s, bool *success) {
+  for (int i = 0; i < sizeof(regs)/sizeof(const char*); i++){
+  if (strcmp(s, regs[i]) == 0){
+    *success = true;
+    return cpu.gpr[i];
+  }
+}
+  // *success = false;
+  printf("the reg name is incorrect!s\n");
   return 0;
 }

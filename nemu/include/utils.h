@@ -19,13 +19,13 @@
 #include <common.h>
 
 // ----------- state -----------
-
 enum { NEMU_RUNNING, NEMU_STOP, NEMU_END, NEMU_ABORT, NEMU_QUIT };
+
 
 typedef struct {
   int state;
-  vaddr_t halt_pc;
-  uint32_t halt_ret;
+  vaddr_t halt_pc;//L 停止pc uint32
+  uint32_t halt_ret;//L 停止ret uint32
 } NEMUState;
 
 extern NEMUState nemu_state;
