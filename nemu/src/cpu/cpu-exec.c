@@ -47,7 +47,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   #endif
 }
 
-static void exec_once(Decode *s, vaddr_t pc) {
+static void exec_once(Decode *s, vaddr_t pc) {//L 执行一条指令
   s->pc = pc;
   s->snpc = pc;
   isa_exec_once(s);//L 一条指令的具体执行，不同架构的指令执行不一样。
@@ -80,8 +80,8 @@ static void exec_once(Decode *s, vaddr_t pc) {
 
 static void execute(uint64_t n) {
   Decode s;
-  for (;n > 0; n --) {
-    exec_once(&s, cpu.pc);//L 让CPU执行当前PC指向的一条指令，然后更新PC.
+  for (;n > 0; n --) {//L 每次调用exec_once时，当前指令的地址都是通过cpu.pc指定的.
+    exec_once(&s, cpu.pc);//L 让CPU执行当前PC指向的一条指令，然后更新PC. PC的初始值0x8000 0000.
     g_nr_guest_inst ++;//L 指令数目. 
     trace_and_difftest(&s, cpu.pc);
     if (nemu_state.state != NEMU_RUNNING) break;

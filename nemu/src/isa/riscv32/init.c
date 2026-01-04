@@ -28,7 +28,7 @@ static const uint32_t img [] = {
 
 static void restart() {
   /* Set the initial program counter. */
-  cpu.pc = RESET_VECTOR;//L RESET_VECTOR = 0x80000000.
+  cpu.pc = RESET_VECTOR;//L RESET_VECTOR = 0x8000 0000.PC的初始值.
 
   /* The zero register is always 0.L 0号寄存器存放的是0 */
   cpu.gpr[0] = 0;

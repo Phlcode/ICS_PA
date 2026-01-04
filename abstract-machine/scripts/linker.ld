@@ -3,10 +3,10 @@ PHDRS { text PT_LOAD; data PT_LOAD; }
 
 SECTIONS {
   /* _pmem_start and _entry_offset are defined in LDFLAGS */
-  . = _pmem_start + _entry_offset;
-  .text : {
-    *(entry)
-    *(.text*)
+  . = _pmem_start + _entry_offset;/*0x8000 0000*/
+  .text : {/*text节*/
+    *(entry)/*text节以entry节开始*/
+    *(.text*)/*其他目标文件的text节*/
   } : text
   etext = .;
   _etext = .;

@@ -4,15 +4,32 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
+//L 返回字符串的长度 遇到\0为止 不会返回\0的长度
 size_t strlen(const char *s) {
-  panic("Not implemented");
+  size_t len = 0;
+  while(*(s++) != '\0'){
+    len += 1;
+  }
+  return len;
+  // panic("Not implemented");
 }
-
+//L 从位置src复制到位置dst,直到遇到字符'\0'为止,返回dst的初始地址。 整个字符串copy
 char *strcpy(char *dst, const char *src) {
-  panic("Not implemented");
+  char *temp = dst;
+  while(*src != '\0'){
+    *dst++ = *src++;
+  }
+  *dst = '\0';//L 需要拷贝末尾的'\0'，这个结束符号很重要，要加上
+  return temp;
+  // panic("Not implemented");
 }
-
+//L 
 char *strncpy(char *dst, const char *src, size_t n) {
+  char *temp = dst;
+  while(n){
+    if()
+    n -= 1; 
+  }
   panic("Not implemented");
 }
 

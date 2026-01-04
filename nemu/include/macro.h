@@ -83,9 +83,9 @@
 // NOTE2: each element in the container can be a tuple
 #define MAP(c, f) c(f)
 
-#define BITMASK(bits) ((1ull << (bits)) - 1)
-#define BITS(x, hi, lo) (((x) >> (lo)) & BITMASK((hi) - (lo) + 1)) // similar to x[hi:lo] in verilog
-#define SEXT(x, len) ({ struct { int64_t n : len; } __x = { .n = x }; (uint64_t)__x.n; })
+#define BITMASK(bits) ((1ull << (bits)) - 1)//L 返回bits位unsigned long long类型的掩码
+#define BITS(x, hi, lo) (((x) >> (lo)) & BITMASK((hi) - (lo) + 1)) // similar to x[hi:lo] in verilog. L对x从高位hi到低位lo的切片 返回值仍然是ull 
+#define SEXT(x, len) ({ struct { int64_t n : len; } __x = { .n = x }; (uint64_t)__x.n; })//L 返回最后一个表达式的值 将输入的x最低len位进行符号拓展至uint64_t
 
 #define ROUNDUP(a, sz)   ((((uintptr_t)a) + (sz) - 1) & ~((sz) - 1))
 #define ROUNDDOWN(a, sz) ((((uintptr_t)a)) & ~((sz) - 1))

@@ -18,8 +18,8 @@
 #include <memory/vaddr.h>
 
 static inline uint32_t inst_fetch(vaddr_t *pc, int len) {
-  uint32_t inst = vaddr_ifetch(*pc, len);
-  (*pc) += len;
+  uint32_t inst = vaddr_ifetch(*pc, len);//读取pc指向地址上的值 4个Byte
+  (*pc) += len;//L 这个地方是s->snpc + len
   return inst;
 }
 

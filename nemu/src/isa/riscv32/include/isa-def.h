@@ -26,7 +26,7 @@ typedef struct {
 // decode
 typedef struct {
   union {
-    uint32_t val;
+    uint32_t val;//L 用于保存指令，相当于指令寄存器IR（Instruction Register）
   } inst;
 } MUXDEF(CONFIG_RV64, riscv64_ISADecodeInfo, riscv32_ISADecodeInfo);
 

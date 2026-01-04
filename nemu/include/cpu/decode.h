@@ -20,9 +20,9 @@
 
 typedef struct Decode {
   vaddr_t pc;
-  vaddr_t snpc; // static next pc
+  vaddr_t snpc; // static next pc 物理意义上的下一条指令 在RISC-V32中 snpc = pc+4
   vaddr_t dnpc; // dynamic next pc
-  ISADecodeInfo isa;
+  ISADecodeInfo isa;//L 对于不同的体系结构，只有PC是通用的，其他架构相关的信息保存在结构体 ISADecodeInfo 中
   IFDEF(CONFIG_ITRACE, char logbuf[128]);
 } Decode;
 
@@ -87,6 +87,11 @@ finish:
 
 
 // --- pattern matching wrappers for decode ---
+
+/*L 函数 pattern_decode 用于将模式字符串转换成3个整形变量.
+if用于匹配指令编码.
+goto用于 进行进一步的译码操作.
+*/
 #define INSTPAT(pattern, ...) do { \
   uint64_t key, mask, shift; \
   pattern_decode(pattern, STRLEN(pattern), &key, &mask, &shift); \
@@ -96,6 +101,7 @@ finish:
   } \
 } while (0)
 
+//L 一行是一个独立的宏定义
 #define INSTPAT_START(name) { const void ** __instpat_end = &&concat(__instpat_end_, name);
 #define INSTPAT_END(name)   concat(__instpat_end_, name): ; }
 
