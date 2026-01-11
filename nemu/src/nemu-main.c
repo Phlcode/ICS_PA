@@ -25,8 +25,8 @@ int main(int argc, char *argv[]) {
 #ifdef CONFIG_TARGET_AM
   am_init_monitor();
 #else
-  init_monitor(argc, argv);
-#endif
+  init_monitor(argc, argv);//L NEMU是一个用来执行客户程序的程序,monitor将客户程序读入到客户计算机中
+#endif 
 
   /* Start engine. */
   engine_start();

@@ -34,7 +34,7 @@ static void restart() {
   cpu.gpr[0] = 0;
 }
 
-void init_isa() {
+void init_isa() {//L 1.将一个内置的客户程序读入到内存中 2.初始化寄存器
   /* Load built-in image. */
   memcpy(guest_to_host(RESET_VECTOR), img, sizeof(img));
 
