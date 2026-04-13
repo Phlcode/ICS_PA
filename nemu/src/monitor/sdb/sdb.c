@@ -82,7 +82,7 @@ static int cmd_si(char *args) {
 }
 
 /**
- * @brief 打印寄存器状态：info r
+ * @brief 打印寄存器状态：info r/info w
  * 
  * @param args 
  * @return int 
@@ -92,11 +92,11 @@ static int cmd_info(char *args) {
   Assert(token != NULL, "Your input is incorrect");
   if(strcmp(token, "r") == 0)
   {
-    isa_reg_display();
+    isa_reg_display();//L 打印寄存器状态
   }
   else if(strcmp(token, "w")== 0)
   {
-    print_watchpoint();
+    print_watchpoint();//L 打印监视点信息
     //L TODO
   }
   else{
@@ -124,7 +124,7 @@ static int cmd_x(char *args) {
   //或者使用Assert(token1 != NULL, "error: missing arguments\n")
   Assert((sscanf(token1, "%u", &ArgsN)), "The format of parameter N is incorrect.");//L 这里如果token1是NULL，sscanf内部会尝试访问该地址，导致段错误，所以需要对指针进行非空校验.
 
-  // 读取第二个参数 无符号参数ArgsAddr，代表起始地址
+  // 读取第二个参数 无符号参数 ArgsAddr ，代表起始地址
   uint32_t ArgsAddr = 0;
   char* token2 = strtok(NULL, " ");
   if (token2 == NULL) {
@@ -136,7 +136,7 @@ static int cmd_x(char *args) {
   printf("[ADDRESS]:      VALUE(hex)\n");
   for(int i = 0; i < ArgsN; i++){
     printf("0x%08x:\t0x%08x\n", ArgsAddr, vaddr_read(ArgsAddr, 4)); //L 0x08x代表 以十六进制形式输出整数 共计8位，不够的使用0补足.
-    ArgsAddr = ArgsAddr + 4; 
+    ArgsAddr = ArgsAddr + 4; //L  内存地址
   }
   return 0;
 }

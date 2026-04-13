@@ -26,7 +26,7 @@ typedef struct watchpoint {
   word_t old_value;//保存表达式的旧值
 } WP;
 
-static WP wp_pool[NR_WP] = {};//L 包含32个WP结构体的静态数组
+static WP wp_pool[NR_WP] = {};//L 包含32个WP结构体的静态数组 直接申请一个含有32个节点的大对象池（大内存数组），避免每次申请一个节点时，向堆中new一个内存，避免操作系统频繁申请/释放一个节点， 避免内部碎片化
 //L head指向已激活监视点组成的链表（使用中的监视点） free_指向可用监视点组成的链表（空闲池）
 //L 两个链表的总结点数为32
 static WP *head = NULL, *free_ = NULL;//L 这个地方定义的是头指针
@@ -44,9 +44,11 @@ void init_wp_pool() {
 }
 
 /* TODO: Implement the functionality of watchpoint */
-
-void add_watchpoint(char* str){//L 给定表达式str 添加一个监视点 用于实现命令w
-  Assert(free_ != NULL, "no free memory for new watchpoint");
+/**
+ * 给定表达式str 添加一个监视点 用于实现命令w
+*/
+void add_watchpoint(char* str){
+  Assert(free_ != NULL, "no free memory for new watchpoint, need to expand watch memory pool!\n");
   bool success = false;
   int value = expr(str, &success);
   if (!success){
@@ -64,7 +66,7 @@ void add_watchpoint(char* str){//L 给定表达式str 添加一个监视点 用�
   ptr->next = head;
   head = ptr;
 
-  printf("Watchpoint %d: %s\n", ptr->NO, ptr->str);
+  printf("WatchPoint %d: %s\n", ptr->NO, ptr->str);
 }
 
 void delete_watchpoint(int no){//L 删除编号对应的监视点，用于实现命令d 

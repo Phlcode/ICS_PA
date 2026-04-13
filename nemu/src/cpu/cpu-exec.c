@@ -84,7 +84,7 @@ static void execute(uint64_t n) {
     exec_once(&s, cpu.pc);//L 让CPU执行当前PC指向的一条指令，然后更新PC. PC的初始值0x8000 0000.
     g_nr_guest_inst ++;//L 指令数目. 
     trace_and_difftest(&s, cpu.pc);
-    if (nemu_state.state != NEMU_RUNNING) break;//L 每次调用exec_once后还会检查NEMU的状态。可能程序没执行到n条指令就结束了（例如，程序本身就没有n条指令），在这种情况下，程序结束运行后应当跳出循环。
+    if (nemu_state.state != NEMU_RUNNING) break;//L 每次调用exec_once后/即每次运行完一条指令后还会检查NEMU的状态。可能程序没执行到n条指令就结束了（例如，程序本身就没有n条指令），在这种情况下，程序结束运行后应当跳出循环。
     IFDEF(CONFIG_DEVICE, device_update());
   }
 }
