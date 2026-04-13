@@ -49,7 +49,7 @@ static struct rule {
    * Pay attention to the precedence level of different rules.
    */
 
-  {" +", TK_NOTYPE},    // spaces
+  {" +", TK_NOTYPE},    // spaces 拓展ASCII字符范围是0-255
   {"\\+", '+'},         // plus 第一个\是C中的第二个\的转义符号，第二个\是正则表达式的转义符号
   {"==", TK_EQ},        // equal
   {"!=", TK_NEQ}, 
@@ -93,7 +93,7 @@ typedef struct token {
 static Token tokens[32] __attribute__((used)) = {};//L 用于按顺序存放已经识别出的token信息
 static int nr_token __attribute__((used))  = 0;//L 指示已经被识别出来的token数目,即记录数组保存的token的个数
 
-static bool make_token(char *e) {//L 识别待求值表达式的中的token,对传入的字符串进行词法分析
+static bool make_token(char *e) {//L 识别待求值表达式的中的token,对传入的字符串进行词法分析 2 + 3 - 5
   int position = 0;
   int i;
   regmatch_t pmatch;//L 
@@ -103,7 +103,7 @@ static bool make_token(char *e) {//L 识别待求值表达式的中的token,对�
   while (e[position] != '\0') {
     /* Try all rules one by one. */
     for (i = 0; i < NR_REGEX; i ++) {
-      if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {//L 匹配目标文本串，执行成功返回0；
+      if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {//L regexec匹配目标文本串，执行成功返回0；regmatch_t结构体类-成员rm_so 存放匹配文本串在目标串中的开始位置，rm_eo 存放结束位置。
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
 
@@ -124,7 +124,7 @@ static bool make_token(char *e) {//L 识别待求值表达式的中的token,对�
           case TK_UINT:
           case TK_REG://REG也需要保存字符串
             tokens[nr_token].type = rules[i].token_type;
-            Assert(substr_len < 32, "Error!token should less than 32 characters!");//L 当子串的长度>=32时，程序会自动触发assert
+            Assert(substr_len < 32, "Error!token should less than 32 characters!");//L 当子串的长度>=32时，程序会自动触发assert，因为Token的str元素最大位32，如果把超过32位的字符串放入里面，会发生缓冲区溢出。
             strncpy(tokens[nr_token].str, substr_start, substr_len);//strncpy不会自动加上\0,因此需要手动加上结束符号
             tokens[nr_token++].str[substr_len] = '\0';
             break;
@@ -134,7 +134,7 @@ static bool make_token(char *e) {//L 识别待求值表达式的中的token,对�
           case '-':
             tokens[nr_token].type = '-';
             if (tokens[nr_token].type == '-'){//这里需要根据前一个token的类型判断其是否为 负号
-              int tk = (nr_token == 0 ? -1 : tokens[nr_token - 1].type);//获取前一个token的类型，如果是第一个 直接赋值-1
+              int tk = (nr_token == 0 ? -1 : tokens[nr_token - 1].type);//获取前一个token的类型，如果nr_token是第一个 直接赋值-1，如果nr_token不是第一个，比如(-1+2)这种情况下-被判断为负号
               if (nr_token == 0 || tk == '+' || tk == '-' 
                   || tk == '*' || tk == '/' || tk == '('
                   || tk == TK_EQ || tk == TK_NEQ || tk == TK_AND){
@@ -145,8 +145,8 @@ static bool make_token(char *e) {//L 识别待求值表达式的中的token,对�
             break;
           case '*':
             tokens[nr_token].type = '*';
-            if (tokens[nr_token].type == '*'){//这里需要根据前一个token的类型判断其是否为 负号
-              int tk = (nr_token == 0 ? -1 : tokens[nr_token - 1].type);//获取前一个token的类型，如果是第一个 直接赋值-1
+            if (tokens[nr_token].type == '*'){//这里需要根据前一个token的类型判断其是否为 解引用符号
+              int tk = (nr_token == 0 ? -1 : tokens[nr_token - 1].type);//获取前一个token的类型，如果nr_token是第一个 直接赋值-1
               if (nr_token == 0 || tk == '+' || tk == '-' 
                   || tk == '*' || tk == '/' || tk == '('
                   || tk == TK_EQ || tk == TK_NEQ || tk == TK_AND){
@@ -174,11 +174,12 @@ static bool make_token(char *e) {//L 识别待求值表达式的中的token,对�
             tokens[nr_token++].type = TK_AND;
             break;  
           default: 
-            TODO();
+            Assert(false, "unknow token type %d", rules[i].token_type);  // 未知的token类型
+            // TODO();
             break;
         }
 
-        break;
+        break;//L rules[]相当于一个规则表，对每一个输入字符都进行字符匹配；每次匹配到一个，就break，对下一个字符进行全规则匹配。 对于多字符类型的情况，当轮到规则 {"&&", TK_AND} 时，正则表达式 "&&" 会尝试匹配连续的 &&
       }
     }
 
@@ -194,7 +195,7 @@ static bool make_token(char *e) {//L 识别待求值表达式的中的token,对�
 word_t expr(char *e, bool *success) {//L 对0～nr_token范围内的tokens进行求值，最后返回表达式的值.
   *success = true;
 
-  if (!make_token(e)) {
+  if (!make_token(e)) {//L 如果词法分析成功，tokens结构体数组中已经存储了我们的输入的表达式
     *success = false;//L 如果没有token匹配成功，这会将success标志记录为false
     return 0;
   }
@@ -215,7 +216,7 @@ uint32_t eval_expr(int p, int q, bool *success){
   if (p > q){
     *success = false;//表达式求值异常
     // Assert(0, "表达式求值异常!!!");
-    printf("表达式求值异常!!!");
+    printf("索引错误！\n");
     return 0;
   }
   else if (p == q){
@@ -230,13 +231,13 @@ uint32_t eval_expr(int p, int q, bool *success){
         sscanf(tokens[p].str, "%x", &result);
         return result;
       case TK_REG:
-        return isa_reg_str2val(tokens[p].str + 1, success);// +1的目的是排除输入字符串$ra中的$ 从而传入 ra，查询成功后 返回ra的值
+        return isa_reg_str2val(tokens[p].str + 1, success);// +1的目的是排除输入字符串"$ra"中的$ 从而传入 ra，查询成功后 返回ra的值
       default:
         Assert(false, "error token type %d", tokens[p].type);
         // return false;
     }  
   }
-  else if (check_parentheses(p, q) == true){//如果表达式被一括号包围，那么需要去掉括号 这个函数需要自己实现
+  else if (check_parentheses(p, q) == true){//L如果表达式被一括号包围，那么需要去掉括号，检查左右括号是否匹配，如不匹配返回false
     return eval_expr(p + 1, q - 1, success);//去掉外层括号后，递归调用eval_expr函数
   }
   else {
@@ -277,7 +278,7 @@ static bool check_parentheses(int p, int q){
     if (tokens[i].type == '('){
       diff++;
     }
-    if (tokens[i].type == ')'){
+    else if (tokens[i].type == ')'){
       diff--;
     }
     if (diff < 0){
@@ -288,7 +289,7 @@ static bool check_parentheses(int p, int q){
   }
   if (diff != 0){//当遍历完表达式时，diff不为0，说明左右括号不匹配
     // Assert(0, "表达式的左右括号不匹配!!!");
-    printf("表达式的左/’右括号不匹配!!!");
+    printf("表达式的左/右括号不匹配！");
     return false;
   }
   return true;
@@ -316,8 +317,8 @@ static int find_main_operator_index(int p, int q){
       case TK_NEQ:
       case TK_DEREF:
       case TK_NEG:
-        if (LeftNum == 0 && //排除了主运算符在括号内的情况;
-                            (MainOperatorIndex == -1 || priority(Operator) > priority(MainOperator))){
+        if (LeftNum == 0 && //排除了主运算符在括号内的情况;主运算符一定不在()内
+                            (MainOperatorIndex == -1 || priority(Operator) >= priority(MainOperator))){//L 这里优先级判断一定是 >=
             MainOperatorIndex = i;
             MainOperator = Operator;
            }
@@ -330,9 +331,9 @@ static int find_main_operator_index(int p, int q){
 }
 
 static int priority(int operator){
-  //优先级越高，数值越小
+  //优先级越高，数值越小；优先级越低，数值越大
   switch (operator){
-    case TK_AND:
+    case TK_AND://优先级低
       return 4;
     case TK_EQ:
     case TK_NEQ:
@@ -343,7 +344,7 @@ static int priority(int operator){
     case '*':
     case '/':
       return 1;
-    case TK_DEREF:
+    case TK_DEREF://优先级高
     case TK_NEG:
       return 0;
     default:
