@@ -25,9 +25,11 @@ const char *regs[] = {//L 寄存器的名字 对应的值在cpu.gpr中
 
 void isa_reg_display() {
   bool success = false;
+  printf("Reg \t Hex\t\t Dec\n");
+  printf("%s = \t 0x%08x \t %0u \n", "PC", cpu.pc, cpu.pc);
   for (int i = 0; i < sizeof(regs)/sizeof(const char*); i++){
     word_t RegVal = isa_reg_str2val(regs[i], &success);
-    printf("%s \t %x \t %d \n", regs[i], RegVal, RegVal);
+    printf("%s = \t 0x%08x \t %0u \n", regs[i], RegVal, RegVal);
 }
 
 }
@@ -35,12 +37,12 @@ void isa_reg_display() {
 //L 通过寄存器名称来获取寄存器值的函数
 word_t isa_reg_str2val(const char *s, bool *success) {
   for (int i = 0; i < sizeof(regs)/sizeof(const char*); i++){
-  if (strcmp(s, regs[i]) == 0){
-    *success = true;
-    return cpu.gpr[i];
+    if (strcmp(s, regs[i]) == 0){
+      *success = true;
+      return cpu.gpr[i];
+    }
   }
-}
   // *success = false;
-  printf("the reg name is incorrect!s\n");
+  printf("the %s reg name is incorrect!s\n", s);
   return 0;
 }

@@ -15,7 +15,7 @@
 
 #include <cpu/cpu.h>
 #include <cpu/decode.h>
-#include <cpu/difftest.h>
+#include <cpu/difftest.h>//L 编译时将nemu/include指定为查找头文件的目录，当编译器遇到尖括号括起的文件时，就会在这些指定的目录中寻找匹配的文件.
 #include <locale.h>
 
 /* The assembly code of instructions executed is only output to the screen
@@ -84,7 +84,7 @@ static void execute(uint64_t n) {
     exec_once(&s, cpu.pc);//L 让CPU执行当前PC指向的一条指令，然后更新PC. PC的初始值0x8000 0000.
     g_nr_guest_inst ++;//L 指令数目. 
     trace_and_difftest(&s, cpu.pc);
-    if (nemu_state.state != NEMU_RUNNING) break;
+    if (nemu_state.state != NEMU_RUNNING) break;//L 每次调用exec_once后还会检查NEMU的状态。可能程序没执行到n条指令就结束了（例如，程序本身就没有n条指令），在这种情况下，程序结束运行后应当跳出循环。
     IFDEF(CONFIG_DEVICE, device_update());
   }
 }
@@ -103,7 +103,12 @@ void assert_fail_msg() {
   statistic();
 }
 
-/* Simulate how the CPU works. */
+/** Simulate how the CPU works. 
+ * 这个函数的作用是 
+ * 1.执行n条指令，这一功能交给函数execute(n)完成
+ * 2.在调用execute(n)前后检查NEMU的运行状态（即nemu_state.state）
+ * 3.计算调用execute(n)耗费的时间（保存在变量g_timer中），以测量CPU的性能
+*/
 void cpu_exec(uint64_t n) {//L 传入-1时会发生隐式转换，变成一个很大的无符号数，这里可以理解为执行“无穷”步.
   g_print_step = (n < MAX_INST_TO_PRINT);//L 这个地方g_print_step是flase.
   switch (nemu_state.state) {//L 默认state==NEMU_STOP.

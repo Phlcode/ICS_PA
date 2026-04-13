@@ -52,7 +52,7 @@ static int cmd_c(char *args) {
 }
 
 /**
- * @brief 执行n条命令:si n
+ * @brief 执行n条指令后暂停执行:si n
  * 
  * @param args 
  * @return int 
@@ -71,7 +71,7 @@ static int cmd_si(char *args) {
   */
   char *token = strtok(NULL, " ");
   if (token != NULL){
-    Assert(sscanf(token, "%lu", &n), "The input step n is not a number");//L 如果sscanf返回0，则打印后面的字符串.
+    Assert(sscanf(token, "%lu", &n), "The input step n is not a number");//L 如果没有匹配到任何项sscanf返回0，则打印后面的字符串.从字符串token解析无符号长整数到n；sscanf函数的返回值表示成功匹配并赋值的参数个数
   }
   else{
     n = 1;
@@ -89,7 +89,7 @@ static int cmd_si(char *args) {
  */
 static int cmd_info(char *args) {
   char* token = strtok(NULL, " ");
-  Assert(!(token == NULL), "Your input is incorrect");
+  Assert(token != NULL, "Your input is incorrect");
   if(strcmp(token, "r") == 0)
   {
     isa_reg_display();
@@ -106,7 +106,7 @@ static int cmd_info(char *args) {
   return 0;
 }
 
-/** 打印起始地址Addr后的连续N个地址单元中的值：x N Addr
+/** 打印起始地址Addr后的连续N个地址单元中的值：x N Addr    Addr是默认16进制 不需要输入0x
  * 
  * @param args 
  * @return int 
@@ -116,16 +116,26 @@ static int cmd_x(char *args) {
 
   // 读取第一个参数 无符号参数ArgsN，代表读取几个单元的地址
   uint32_t ArgsN = 0;
-  char* token1 = strtok(NULL, " ");
-  Assert((sscanf(token1, "%u", &ArgsN)), "The format of parameter N is incorrect.");
+  char* token1 = strtok(NULL, " ");//L NULL 参数告诉 strtok 继续从上次的位置开始搜索
+  if (token1 == NULL) {
+		printf("error: missing arguments\n");
+		return 0;
+	}
+  //或者使用Assert(token1 != NULL, "error: missing arguments\n")
+  Assert((sscanf(token1, "%u", &ArgsN)), "The format of parameter N is incorrect.");//L 这里如果token1是NULL，sscanf内部会尝试访问该地址，导致段错误，所以需要对指针进行非空校验.
 
   // 读取第二个参数 无符号参数ArgsAddr，代表起始地址
   uint32_t ArgsAddr = 0;
   char* token2 = strtok(NULL, " ");
+  if (token2 == NULL) {
+		printf("error: missing arguments Addr\n");
+		return 0;
+	}
+  
   Assert((sscanf(token2, "%x", &ArgsAddr)), "The format of parameter Addr is incorrect.");
   printf("[ADDRESS]:      VALUE(hex)\n");
   for(int i = 0; i < ArgsN; i++){
-    printf("0x%08x:\t0x%08x\n", ArgsAddr, vaddr_read(ArgsAddr, 4)); 
+    printf("0x%08x:\t0x%08x\n", ArgsAddr, vaddr_read(ArgsAddr, 4)); //L 0x08x代表 以十六进制形式输出整数 共计8位，不够的使用0补足.
     ArgsAddr = ArgsAddr + 4; 
   }
   return 0;
@@ -142,12 +152,12 @@ static int cmd_p(char *args){
     return 0;
   }
   bool success = false;
-  word_t value = expr(args, &success);
+  word_t value = expr(args, &success);//L 可以计算表达式的值
   if (!success){
     printf("Token Match Failed, Please Check Input Expression\n");
     return 0;
   }
-  printf("The Value of Expression is %u\n", value);
+  printf("The Value of Expression is 0x%x(Hex)\t%u(Dec)\n", value, value);
   return 0;
 }
 
@@ -177,8 +187,6 @@ static int cmd_d(char* args){
   }
   return 0;
 }
-
-
 
 
 static int cmd_q(char *args) {
@@ -243,7 +251,7 @@ void sdb_mainloop() {
   }
 
   /*L 每次for循环 将调用一次rl_gets()函数，获得用户在命令行中敲入的字符串(回车键之前)；
-  然后通过strtok函数提取第一个空格以前的字符串作为命令，其余字符串作为参数；然后查找注册的命令表，
+  然后通过strtok函数提取第一个 空格 以前的字符串作为命令，其余字符串作为参数；然后查找注册的命令表，
   匹配；执行.
    */
 
@@ -251,7 +259,7 @@ void sdb_mainloop() {
     char *str_end = str + strlen(str);
     // int a = strlen(str);
     /* extract the first token as the command */
-    char *cmd = strtok(str, " ");//L 返回切割下的字符串首地址，str也会发生改变，指向分割后的字符串首地址
+    char *cmd = strtok(str, " ");//L 以" "为分割符，返回切割下的字符串首地址，str也会发生改变，指向分割后的字符串首地址
     if (cmd == NULL) { continue; }
 
     /* treat the remaining string as the arguments,
