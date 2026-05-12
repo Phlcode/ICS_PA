@@ -32,11 +32,11 @@ enum {
   TYPE_N, // none
 };
 
-//L BITS 用于位抽取 SEXT 用于符号拓展
+//L BITS 用于位抽取； SEXT 用于符号拓展
 #define src1R() do { *src1 = R(rs1); } while (0)
 #define src2R() do { *src2 = R(rs2); } while (0)//L src<d>R 表示寄存器的读取结果记录到相应的操作数变量中
 #define immI() do { *imm = SEXT(BITS(i, 31, 20), 12); } while(0)
-#define immU() do { *imm = SEXT(BITS(i, 31, 12), 20) << 12; } while(0)
+#define immU() do { *imm = SEXT(BITS(i, 31, 12), 20) << 12; } while(0)//L 左移低位自动补0，即低12位自动补0
 #define immS() do { *imm = (SEXT(BITS(i, 31, 25), 7) << 5) | BITS(i, 11, 7); } while(0)//L imm<C> 表示直接在指令中抽取出立即数
 
 #define immR() do { *imm = 0;} while(0)
@@ -46,11 +46,11 @@ enum {
 #define immJ() do { *imm = (SEXT(BITS(i, 31, 31), 1) << 20) | BITS(i, 30, 21) << 1 | BITS(i, 20, 20) << 11 | BITS(i, 19, 12)<< 12; }while(0)
 
 static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_t *imm, int type) {//L 从指令中提取信息
-  //L risc-v32的一条指令最多涉及3个寄存器src1 src2，和1个立即数imm
+  //L risc-v32的一条指令最多涉及3个寄存器src1 src2，和1个立即数imm？存疑
   uint32_t i = s->isa.inst.val;
   int rs1 = BITS(i, 19, 15);
   int rs2 = BITS(i, 24, 20);
-  *rd     = BITS(i, 11, 7);//L 对 目的操作数 进行寄存器操作数的译码.
+  *rd     = BITS(i, 11, 7);//L 对 目的操作数 进行寄存器操作数的译码，即解码出目的寄存器编号,decode_exec中rd的值会随着指令的不同而改变，即便是同一条add指令，他们的rd也很可能不一样；这是由汇编器/编译器根据程序需要生成的
   switch (type) {
     case TYPE_I: src1R();          immI(); break;
     case TYPE_U:                   immU(); break;
@@ -62,7 +62,7 @@ static void decode_operand(Decode *s, int *rd, word_t *src1, word_t *src2, word_
 }
 
 static int decode_exec(Decode *s) {//L 译码.
-  int rd = 0;//L 目的操作数的寄存器号码
+  int rd = 0;//L 目的操作数的寄存器号码，目的寄存器的编号，即运算结果要写入的通用寄存器索引
   word_t src1 = 0, src2 = 0, imm = 0;//L src1 src2表示两个源操作数 imm表示立即数
   s->dnpc = s->snpc;// 这个地方将静态指令PC 赋给动态指令PC 动态指令PC才是真正的下一条指令PC
 
@@ -70,7 +70,7 @@ static int decode_exec(Decode *s) {//L 译码.
 /*L ...表示可变数量的参数*/
 #define INSTPAT_MATCH(s, name, type, ... /* execute body */ ) { \
   decode_operand(s, &rd, &src1, &src2, &imm, concat(TYPE_, type)); \
-  /*L __VA_ARGS__ 会被替换为调用时传入 ... 的代码 即 指令执行操作.*/\
+  /*L __VA_ARGS__ 会被替换为调用时传入 ... 的代码 即 指令执行操作；当decode_operand执行完之后，得到了src1, src2, rd, imm的值*/\
   __VA_ARGS__ ; \
   }
 
@@ -186,5 +186,5 @@ static int decode_exec(Decode *s) {//L 译码.
 
 int isa_exec_once(Decode *s) {//L 传进来是s  s->pc和s->snpc相等
   s->isa.inst.val = inst_fetch(&s->snpc, 4);//L risc-v32是定长指令集，32位架构下，每条指令是4字节
-  return decode_exec(s);//L 在指令执行阶段，s->snpc始终指向下一条指令的地址.
+  return decode_exec(s);//L 在指令译码、执行阶段，s->snpc始终指向下一条指令的地址.
 }

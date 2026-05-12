@@ -88,7 +88,7 @@ finish:
 
 // --- pattern matching wrappers for decode ---
 
-/*L 函数 pattern_decode 用于将模式字符串转换成3个整形变量.
+/*L 函数 pattern_decode 用于将模式字符串转换成3个整形变量key, mask, shift的值. STRLEN(pattern)==38：32 + 5个空格字符
 if用于匹配指令编码.
 goto用于 进行进一步的译码操作.
 */

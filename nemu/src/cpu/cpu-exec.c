@@ -47,9 +47,9 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   #endif
 }
 
-static void exec_once(Decode *s, vaddr_t pc) {//L 执行一条指令
-  s->pc = pc;
-  s->snpc = pc;
+static void exec_once(Decode *s, vaddr_t pc) {//L 执行一条指令 传进来的是cpu.pc
+  s->pc = pc;//L 当前指令的PC
+  s->snpc = pc;//L static next PC下一条指令的PC
   isa_exec_once(s);//L 一条指令的具体执行，不同架构的指令执行不一样。
   cpu.pc = s->dnpc;
 #ifdef CONFIG_ITRACE
