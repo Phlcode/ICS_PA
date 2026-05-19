@@ -25,11 +25,11 @@ char *strcpy(char *dst, const char *src) {
 }
 //L 
 char *strncpy(char *dst, const char *src, size_t n) {
-  char *temp = dst;
-  while(n){
-    if()
-    n -= 1; 
-  }
+  // char *temp = dst;
+  // while(n){
+  //   // if(1)
+  //   n -= 1; 
+  // }
   panic("Not implemented");
 }
 
