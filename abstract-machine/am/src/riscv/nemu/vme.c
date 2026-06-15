@@ -24,7 +24,7 @@ static inline uintptr_t get_satp() {
   return satp << 12;
 }
 
-bool vme_init(void* (*pgalloc_f)(int), void (*pgfree_f)(void*)) {
+bool vme_init(void* (*pgalloc_f)(int), void (*pgfree_f)(void*)) {//L 初始化虚存管理
   pgalloc_usr = pgalloc_f;
   pgfree_usr = pgfree_f;
 
@@ -44,6 +44,7 @@ bool vme_init(void* (*pgalloc_f)(int), void (*pgfree_f)(void*)) {
   return true;
 }
 
+//L 地址空间管理 创建/销毁一个地址空间
 void protect(AddrSpace *as) {
   PTE *updir = (PTE*)(pgalloc_usr(PGSIZE));
   as->ptr = updir;
@@ -66,7 +67,7 @@ void __am_switch(Context *c) {
   }
 }
 
-void map(AddrSpace *as, void *va, void *pa, int prot) {
+void map(AddrSpace *as, void *va, void *pa, int prot) {//L 修改地址空间映射
 }
 
 Context *ucontext(AddrSpace *as, Area kstack, void *entry) {

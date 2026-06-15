@@ -245,7 +245,7 @@ void sdb_set_batch_mode() {
 }
 
 void sdb_mainloop() {
-  if (is_batch_mode) {//L 默认没有走里面.
+  if (is_batch_mode) {//L 默认没有走里面. 批处理走里面
     cmd_c(NULL);
     return;
   }

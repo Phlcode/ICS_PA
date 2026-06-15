@@ -34,7 +34,7 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
   return NULL;
 }
 
-void yield() {
+void yield() {//L 陷入内核执行
 #ifdef __riscv_e
   asm volatile("li a5, -1; ecall");
 #else
@@ -42,6 +42,7 @@ void yield() {
 #endif
 }
 
+//L 外部中断管理，多处理器安全，每个处理器都有自己独立的中断标志位
 bool ienabled() {
   return false;
 }

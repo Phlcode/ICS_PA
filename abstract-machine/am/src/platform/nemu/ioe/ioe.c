@@ -46,7 +46,7 @@ static void *lut[128] = {
 
 static void fail(void *buf) { panic("access nonexist register"); }
 
-bool ioe_init() {
+bool ioe_init() {//L 初始化I/O拓展
   for (int i = 0; i < LENGTH(lut); i++)
     if (!lut[i]) lut[i] = fail;
   __am_gpu_init();
@@ -55,5 +55,6 @@ bool ioe_init() {
   return true;
 }
 
+//L I/O设备读写，多处理器不安全，对同一个ID设备的访问必须互斥
 void ioe_read (int reg, void *buf) { ((handler_t)lut[reg])(buf); }
 void ioe_write(int reg, void *buf) { ((handler_t)lut[reg])(buf); }
