@@ -17,6 +17,7 @@
 #include <cpu/decode.h>
 #include <cpu/difftest.h>//L 编译时将nemu/include指定为查找头文件的目录，当编译器遇到尖括号括起的文件时，就会在这些指定的目录中寻找匹配的文件.
 #include <locale.h>
+#include "iringbuf/iringbuf.h"
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -32,13 +33,15 @@ uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
+static iringbuf* rb = NULL;
+
 void device_update();
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
 #endif
-  if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
+  if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }//L 执行10条以上的指令时，g_print_step是flase. puts将一个字符串输出到标准输出设备（通常是屏幕），并在末尾自动追加一个换行符 \n
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
   #ifdef CONFIG_WATCHPOINT
     if (update_watchpoint() > 0){//L 当监视点的值发生变化 则暂停程序.
@@ -55,12 +58,13 @@ static void exec_once(Decode *s, vaddr_t pc) {//L 执行一条指令 传进来�
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
-  int ilen = s->snpc - s->pc;
+  int ilen = s->snpc - s->pc;//L 指令的字节数
   int i;
   uint8_t *inst = (uint8_t *)&s->isa.inst.val;
   for (i = ilen - 1; i >= 0; i --) {
-    p += snprintf(p, 4, " %02x", inst[i]);
+    p += snprintf(p, 4, " %02x", inst[i]);//L 按照字节顺序打印指令的十六进制值
   }
+  //L log加space_len个空格的间隔.
   int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
   int space_len = ilen_max - ilen;
   if (space_len < 0) space_len = 0;
@@ -68,6 +72,14 @@ static void exec_once(Decode *s, vaddr_t pc) {//L 执行一条指令 传进来�
   memset(p, ' ', space_len);
   p += space_len;
 
+  // L log加入反汇编的结果
+  /* L 参数包括
+  	p: 指向日志缓冲区的指针
+    s->logbuf + sizeof(s->logbuf) - p: 指定可用的缓冲区大小
+    MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc): 指定程序计数器
+    (uint8_t *)&s->isa.inst.val：指向当前指令的代码
+    ilen:指令的字节数
+  */
 #ifndef CONFIG_ISA_loongarch32r
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
@@ -110,7 +122,7 @@ void assert_fail_msg() {
  * 3.计算调用execute(n)耗费的时间（保存在变量g_timer中），以测量CPU的性能
 */
 void cpu_exec(uint64_t n) {//L 传入-1时会发生隐式转换，变成一个很大的无符号数，这里可以理解为执行“无穷”步.
-  g_print_step = (n < MAX_INST_TO_PRINT);//L 这个地方g_print_step是flase.
+  g_print_step = (n < MAX_INST_TO_PRINT);//L 这个地方执行10条以上的指令时，g_print_step是flase.
   switch (nemu_state.state) {//L 默认state==NEMU_STOP.
     case NEMU_END: case NEMU_ABORT:
       printf("Program execution has ended. To restart the program, exit NEMU and run again.\n");
@@ -119,6 +131,8 @@ void cpu_exec(uint64_t n) {//L 传入-1时会发生隐式转换，变成一个�
   }
 
   uint64_t timer_start = get_time();
+  rb = (iringbuf *) malloc(sizeof(iringbuf));
+  init_ringbuf(rb);
 
   execute(n);//L 模拟CPU的工作方式，不断地执行指令.
 
@@ -128,13 +142,16 @@ void cpu_exec(uint64_t n) {//L 传入-1时会发生隐式转换，变成一个�
   switch (nemu_state.state) {
     case NEMU_RUNNING: nemu_state.state = NEMU_STOP; break;
 
-    case NEMU_END: case NEMU_ABORT:
+    //L 当前状态如果不是NEMU_ABORT，同时nemu_state.halt_ret不为0时，则会打印HIT BAD TRAP
+    case NEMU_END: case NEMU_ABORT://L 两个case分支公用一个代码块      
       Log("nemu: %s at pc = " FMT_WORD,
           (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
            (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
             ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
           nemu_state.halt_pc);
-      // fall through
+      print_ringbuf(rb);
+      destroy_ringbuf(rb);
+      // fall through 没有break继续执行NEMU_QUIT
     case NEMU_QUIT: statistic();
   }
 }
