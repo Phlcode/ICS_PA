@@ -18,6 +18,8 @@
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
 
+void trace_inst(word_t pc, uint32_t inst);
+
 #define R(i) gpr(i)
 #define Mr vaddr_read
 #define Mw vaddr_write
@@ -184,7 +186,8 @@ static int decode_exec(Decode *s) {//L 译码.
   return 0;
 }
 
-int isa_exec_once(Decode *s) {//L 传进来是s  s->pc和s->snpc相等
+int isa_exec_once(Decode *s) {//L 传进来是s  s->pc和s->snpc相等  
   s->isa.inst.val = inst_fetch(&s->snpc, 4);//L risc-v32是定长指令集，32位架构下，每条指令是4字节
+  IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst.val));//L 需要记录导致程序出错的指令，因此"存"的时机要在其取指之后, 执行之前
   return decode_exec(s);//L 在指令译码、执行阶段，s->snpc始终指向下一条指令的地址.
 }

@@ -162,7 +162,11 @@ config DIFFTEST
 
 config WATCHPOINT
   bool "Enable watchpoint"
-  default n    
+  default n  
+  
+config MTRACE
+  bool "Enable memory tracer"
+  default y
 
 choice
   prompt "Reference design"

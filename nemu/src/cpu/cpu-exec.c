@@ -17,7 +17,7 @@
 #include <cpu/decode.h>
 #include <cpu/difftest.h>//L 编译时将nemu/include指定为查找头文件的目录，当编译器遇到尖括号括起的文件时，就会在这些指定的目录中寻找匹配的文件.
 #include <locale.h>
-#include "iringbuf/iringbuf.h"
+// #include "iringbuf/iringbuf.h"
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -27,13 +27,15 @@
 #define MAX_INST_TO_PRINT 10
 
 int update_watchpoint();
+void display_inst();
+void trace_inst(word_t pc, uint32_t inst);
 
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
-static iringbuf* rb = NULL;
+// static iringbuf* rb = NULL;
 
 void device_update();
 
@@ -111,6 +113,7 @@ static void statistic() {
 }
 
 void assert_fail_msg() {
+  display_inst();
   isa_reg_display();
   statistic();
 }
@@ -131,8 +134,8 @@ void cpu_exec(uint64_t n) {//L 传入-1时会发生隐式转换，变成一个�
   }
 
   uint64_t timer_start = get_time();
-  rb = (iringbuf *) malloc(sizeof(iringbuf));
-  init_ringbuf(rb);
+  // rb = (iringbuf *) malloc(sizeof(iringbuf));
+  // init_ringbuf(rb);
 
   execute(n);//L 模拟CPU的工作方式，不断地执行指令.
 
@@ -149,8 +152,8 @@ void cpu_exec(uint64_t n) {//L 传入-1时会发生隐式转换，变成一个�
            (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
             ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
           nemu_state.halt_pc);
-      print_ringbuf(rb);
-      destroy_ringbuf(rb);
+      // print_ringbuf(rb);
+      // destroy_ringbuf(rb);
       // fall through 没有break继续执行NEMU_QUIT
     case NEMU_QUIT: statistic();
   }
