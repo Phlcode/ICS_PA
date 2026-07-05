@@ -1,7 +1,10 @@
 #include <common.h>
 
+#ifdef CONFIG_ITRACE
+
 /*使用数组来实现环形缓冲区，用这个版本*/
 #define MAX_IRINGBUF 16//L 最大可存放指令的条数
+void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
 
 typedef struct {
   word_t pc;
@@ -25,7 +28,6 @@ void display_inst() {//L 对缓冲区进行取（展示经过反汇编的指令�
   int end = p_cur;
   int i = full?p_cur:0;
 
-  void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
   char buf[128]; // 128 should be enough!
   char *p;
   printf("Most recently executed instructions");
@@ -39,6 +41,9 @@ void display_inst() {//L 对缓冲区进行取（展示经过反汇编的指令�
   } while ((i = (i+1)%MAX_IRINGBUF) != end);
   puts(ANSI_NONE);
 }
+#endif
+
+#ifdef CONFIG_MTRACE
 
 void display_pread(paddr_t addr, int len) {
   printf("pread at " FMT_PADDR " len=%d\n", addr, len);
@@ -47,3 +52,4 @@ void display_pread(paddr_t addr, int len) {
 void display_pwrite(paddr_t addr, int len, word_t data) {
   printf("pwrite at " FMT_PADDR " len=%d, data=" FMT_WORD "\n", addr, len, data);
 }
+#endif

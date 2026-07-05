@@ -27,7 +27,9 @@
 #define MAX_INST_TO_PRINT 10
 
 int update_watchpoint();
+#ifdef CONFIG_ITRACE
 void display_inst();
+#endif
 void trace_inst(word_t pc, uint32_t inst);
 
 CPU_state cpu = {};
@@ -113,7 +115,9 @@ static void statistic() {
 }
 
 void assert_fail_msg() {
+#ifdef CONFIG_ITRACE
   display_inst();
+#endif
   isa_reg_display();
   statistic();
 }

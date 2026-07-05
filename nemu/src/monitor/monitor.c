@@ -24,6 +24,10 @@ void init_device();
 void init_sdb();
 void init_disasm(const char *triple);
 
+#ifdef CONFIG_FTRACE
+void parse_elf(const char* elf_file);
+#endif
+
 static void welcome() {
   Log("Trace: %s", MUXDEF(CONFIG_TRACE, ANSI_FMT("ON", ANSI_FG_GREEN), ANSI_FMT("OFF", ANSI_FG_RED)));
   IFDEF(CONFIG_TRACE, Log("If trace is enabled, a log file will be generated "
@@ -44,6 +48,7 @@ static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
 int aa = 123;
+static char* elf_file = NULL; //L elf文件路径
 
 static long load_img() {
   if (img_file == NULL) {
@@ -73,16 +78,18 @@ static int parse_args(int argc, char *argv[]) {
     {"log"      , required_argument, NULL, 'l'},
     {"diff"     , required_argument, NULL, 'd'},
     {"port"     , required_argument, NULL, 'p'},
+    {"elf"      , required_argument, NULL, 'e'},
     {"help"     , no_argument      , NULL, 'h'},
     {0          , 0                , NULL,  0 },
   };
   int o;
-  while ( (o = getopt_long(argc, argv, "-bhl:d:p:", table, NULL)) != -1) {//L getopt_long对非选项参数返回1
+  while ( (o = getopt_long(argc, argv, "-bhl:d:p:e:", table, NULL)) != -1) {//L getopt_long对非选项参数返回1
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       case 'l': log_file = optarg; break;
       case 'd': diff_so_file = optarg; break;
+      case 'e': elf_file = optarg; break;
       case 1: img_file = optarg; return 0;//L optarg自动存储非选项参数.
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
@@ -90,6 +97,7 @@ static int parse_args(int argc, char *argv[]) {
         printf("\t-l,--log=FILE           output log to FILE\n");
         printf("\t-d,--diff=REF_SO        run DiffTest with reference REF_SO\n");
         printf("\t-p,--port=PORT          run DiffTest with port PORT\n");
+        printf("\t-e,--elf=FILE           elf file to be parsed\n");
         printf("\n");
         exit(0);
     }
@@ -126,6 +134,11 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Initialize the simple debugger. */
   init_sdb();
+
+  #ifdef CONFIG_FTRACE
+  /* Init_monitor elf*/
+  parse_elf(elf_file);
+  #endif
 
 #ifndef CONFIG_ISA_loongarch32r//L 没打开
   IFDEF(CONFIG_ITRACE, init_disasm(

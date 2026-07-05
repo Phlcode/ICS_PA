@@ -18,6 +18,11 @@
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
 
+#ifdef CONFIG_FTRACE
+void trace_func_call(paddr_t pc, paddr_t target);
+void trace_func_ret(paddr_t pc);
+#endif
+
 void trace_inst(word_t pc, uint32_t inst);
 
 #define R(i) gpr(i)
@@ -110,7 +115,19 @@ static int decode_exec(Decode *s) {//L 译码.
     //I instructor
     INSTPAT("??????? ????? ????? 100 ????? 00000 11", lbu    , I, R(rd) = Mr(src1 + imm, 1));//L src1(编号为rs1的寄存器保存的值)加上立即数imm得到内存地址，从这个内存地址读取1个字节，写入编号为rd的寄存器
     INSTPAT("??????? ????? ????? 000 ????? 00100 11", li     , I, R(rd) = src1 + imm);//L 装入立即数
-    INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr   , I, R(rd) = s->snpc; s->dnpc =( src1 + imm)>>1<<1;);//L 寄存器跳转并链接
+    
+    //L 函数调用call 使用质量jal或jalr指令，会向1号寄存器$ra中写入返回地址，即rd==1;
+    //L 函数返回使用jalr指令，且rd==0,rs1==1，imm==0
+    //L jalr rd, rs1, imm
+    INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr   , I, R(rd) = s->snpc; s->dnpc = (src1 + imm)>>1<<1; IFDEF(CONFIG_FTRACE, {
+      if (s->isa.inst.val == 0x00008067) { // ret: jalr x0, 0(x1) 等价与条件判断(rd == 0 && rs1 == 1 && imm == 0)
+        trace_func_ret(s->pc);
+      }
+      else if (rd == 1) {
+        trace_func_call(s->pc, s->dnpc);
+      }
+    }
+    ));//L 寄存器跳转并链接，伪指令ret
     INSTPAT("??????? ????? ????? 010 ????? 00000 11", lw     , I, R(rd) = Mr(src1 + imm, 4));//L 取字 32位系统中 一个字4个字节
     INSTPAT("??????? ????? ????? 011 ????? 00100 11", sltiu  , I, R(rd) = src1 < imm ? 1 : 0);//fib over/bit lose  无符号数小于立即数则置位
     INSTPAT("??????? ????? ????? 100 ????? 00100 11", xori   , I, R(rd) = src1 ^ imm);//L 异或立即数  
@@ -132,7 +149,11 @@ static int decode_exec(Decode *s) {//L 译码.
 
 
     //J instructor
-    INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J, R(rd) = s->snpc; s->dnpc = s->pc +imm);//L 跳转并链接
+    INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal    , J, R(rd) = s->snpc; s->dnpc = s->pc +imm; IFDEF(CONFIG_FTRACE, {
+      if (rd == 1){// x1($ra):stores return value
+        trace_func_call(s->pc, s->dnpc);
+      }
+    }));//L 跳转并链接；函数调用时的伪指令，使用PC相对寻址，目标地址=PC+立即数偏移
 
     //B instructor
     INSTPAT("??????? ????? ????? 001 ????? 11000 11", bne    , B, s->dnpc = (src1 != src2 ? s->pc + imm : s->dnpc));//L 不相等时分支
@@ -187,7 +208,7 @@ static int decode_exec(Decode *s) {//L 译码.
 }
 
 int isa_exec_once(Decode *s) {//L 传进来是s  s->pc和s->snpc相等  
-  s->isa.inst.val = inst_fetch(&s->snpc, 4);//L risc-v32是定长指令集，32位架构下，每条指令是4字节
+  s->isa.inst.val = inst_fetch(&s->snpc, 4);//L risc-v32是定长指令集，32位架构下，每条指令是4字节；取完pc指向的指令之后，s->snpc = s->pc + 4
   IFDEF(CONFIG_ITRACE, trace_inst(s->pc, s->isa.inst.val));//L 需要记录导致程序出错的指令，因此"存"的时机要在其取指之后, 执行之前
   return decode_exec(s);//L 在指令译码、执行阶段，s->snpc始终指向下一条指令的地址.
 }
