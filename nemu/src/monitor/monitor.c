@@ -121,7 +121,7 @@ void init_monitor(int argc, char *argv[]) {
   init_mem();
 
   /* Initialize devices. */
-  IFDEF(CONFIG_DEVICE, init_device());//L 这步没有执行.
+  IFDEF(CONFIG_DEVICE, init_device());//L 这步没有执行. PA2最后打开了
 
   /* Perform ISA dependent initialization. */
   init_isa();//L 加载内置镜像到内存中.

@@ -21,7 +21,7 @@
 #define IO_SPACE_MAX (2 * 1024 * 1024)
 
 static uint8_t *io_space = NULL;
-static uint8_t *p_space = NULL;
+static uint8_t *p_space = NULL;//L 设备专用超级无敌大内存 2MB
 
 uint8_t* new_space(int size) {
   uint8_t *p = p_space;
@@ -52,7 +52,7 @@ void init_map() {
   p_space = io_space;
 }
 
-word_t map_read(paddr_t addr, int len, IOMap *map) {
+word_t map_read(paddr_t addr, int len, IOMap *map) {//L 将地址addr映射到map所指示的目标空间，然后进行访问 
   assert(len >= 1 && len <= 8);
   check_bound(map, addr);
   paddr_t offset = addr - map->low;

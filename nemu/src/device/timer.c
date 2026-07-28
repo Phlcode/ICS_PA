@@ -38,11 +38,11 @@ static void timer_intr() {
 #endif
 
 void init_timer() {
-  rtc_port_base = (uint32_t *)new_space(8);
+  rtc_port_base = (uint32_t *)new_space(8);//L 在“设备专用超级无敌大内存”中寻找一块大小为8字节的内存,并返回其首地址
 #ifdef CONFIG_HAS_PORT_IO
   add_pio_map ("rtc", CONFIG_RTC_PORT, rtc_port_base, 8, rtc_io_handler);
 #else
-  add_mmio_map("rtc", CONFIG_RTC_MMIO, rtc_port_base, 8, rtc_io_handler);
+  add_mmio_map("rtc", CONFIG_RTC_MMIO, rtc_port_base, 8, rtc_io_handler);//L 创建内存映射I/O设备
 #endif
   IFNDEF(CONFIG_TARGET_AM, add_alarm_handle(timer_intr));
 }

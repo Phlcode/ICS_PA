@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-//#define __NATIVE_USE_KLIB__
+//#define __NATIVE_USE_KLIB__//L 如果不定义，程序默认链接到glibc
 
 // string.h
 void  *memset    (void *s, int c, size_t n);

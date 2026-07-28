@@ -56,5 +56,5 @@ bool ioe_init() {//L 初始化I/O拓展
 }
 
 //L I/O设备读写，多处理器不安全，对同一个ID设备的访问必须互斥
-void ioe_read (int reg, void *buf) { ((handler_t)lut[reg])(buf); }
-void ioe_write(int reg, void *buf) { ((handler_t)lut[reg])(buf); }
+void ioe_read (int reg, void *buf) { ((handler_t)lut[reg])(buf); }//L 从编号为reg的寄存器中读出内容到缓冲区buf中
+void ioe_write(int reg, void *buf) { ((handler_t)lut[reg])(buf); }//L 往编号为reg的寄存器中写入缓冲区buf中的内容

@@ -10,7 +10,7 @@ Area heap = RANGE(&_heap_start, PMEM_END);//L 指示堆区的起始和末尾
 #endif
 static const char mainargs[] = MAINARGS;
 
-void putch(char ch) {//L 用于输出一个字符
+void putch(char ch) {//L 用于输出一个字符 将字符输出到一个串口
   outb(SERIAL_PORT, ch);
 }
 

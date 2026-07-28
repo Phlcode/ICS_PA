@@ -75,15 +75,15 @@ void sdl_clear_event_queue() {
 
 void init_device() {
   IFDEF(CONFIG_TARGET_AM, ioe_init());
-  init_map();
+  init_map();//L 申请 p_space 设备专用超级无敌大内存
 
-  IFDEF(CONFIG_HAS_SERIAL, init_serial());
-  IFDEF(CONFIG_HAS_TIMER, init_timer());
-  IFDEF(CONFIG_HAS_VGA, init_vga());
-  IFDEF(CONFIG_HAS_KEYBOARD, init_i8042());
-  IFDEF(CONFIG_HAS_AUDIO, init_audio());
-  IFDEF(CONFIG_HAS_DISK, init_disk());
-  IFDEF(CONFIG_HAS_SDCARD, init_sdcard());
+  IFDEF(CONFIG_HAS_SERIAL, init_serial());//L 串口
+  IFDEF(CONFIG_HAS_TIMER, init_timer());//L 时钟
+  IFDEF(CONFIG_HAS_VGA, init_vga());//L VGA 
+  IFDEF(CONFIG_HAS_KEYBOARD, init_i8042());//L 
+  IFDEF(CONFIG_HAS_AUDIO, init_audio());//L 声卡
+  IFDEF(CONFIG_HAS_DISK, init_disk());//L 磁盘
+  IFDEF(CONFIG_HAS_SDCARD, init_sdcard());//L SD卡
 
-  IFNDEF(CONFIG_TARGET_AM, init_alarm());
+  IFNDEF(CONFIG_TARGET_AM, init_alarm());//L 定时器
 }

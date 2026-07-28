@@ -18,7 +18,7 @@
 
 #define NR_MAP 16
 
-static IOMap maps[NR_MAP] = {};
+static IOMap maps[NR_MAP] = {};//L 保存所有的设备
 static int nr_map = 0;
 
 static IOMap* fetch_mmio_map(paddr_t addr) {
@@ -33,13 +33,17 @@ static void report_mmio_overlap(const char *name1, paddr_t l1, paddr_t r1,
 }
 
 /* device interface */
+//L  add_mmio_map("rtc",         CONFIG_RTC_MMIO, rtc_port_base,          8,         rtc_io_handler)
 void add_mmio_map(const char *name, paddr_t addr, void *space, uint32_t len, io_callback_t callback) {
   assert(nr_map < NR_MAP);
   paddr_t left = addr, right = addr + len - 1;
   if (in_pmem(left) || in_pmem(right)) {
     report_mmio_overlap(name, left, right, "pmem", PMEM_LEFT, PMEM_RIGHT);
   }
+  //L for循环 检查新添加的 MMIO 区域是否和已经存在的 MMIO 区域有地址重叠，防止不同设备映射到同一段物理地址空间
   for (int i = 0; i < nr_map; i++) {
+    //L 考虑区间[left, right], 已存在的区间[low, high]；两个区间不重叠的条件是left>high or right<low
+    //L 取反==>当两个区间重叠时，条件为left<=high and right>=low
     if (left <= maps[i].high && right >= maps[i].low) {
       report_mmio_overlap(name, left, right, maps[i].name, maps[i].low, maps[i].high);
     }

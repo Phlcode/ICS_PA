@@ -22,19 +22,19 @@ typedef void(*io_callback_t)(uint32_t, int, bool);
 uint8_t* new_space(int size);
 
 typedef struct {
-  const char *name;
+  const char *name;//L 名字
   // we treat ioaddr_t as paddr_t here
-  paddr_t low;
-  paddr_t high;
-  void *space;
-  io_callback_t callback;
+  paddr_t low;//L 映射的起始地址
+  paddr_t high;//L 映射的结束地址
+  void *space;//L 映射的目标空间，在堆中申请的
+  io_callback_t callback;// 回调函数
 } IOMap;
 
 static inline bool map_inside(IOMap *map, paddr_t addr) {
   return (addr >= map->low && addr <= map->high);
 }
 
-static inline int find_mapid_by_addr(IOMap *maps, int size, paddr_t addr) {
+static inline int find_mapid_by_addr(IOMap *maps, int size, paddr_t addr) {//L 这个地方的size是nr_map的大小，也就是设备的数量
   int i;
   for (i = 0; i < size; i ++) {
     if (map_inside(maps + i, addr)) {
